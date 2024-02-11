@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>buscador de imagen con voz</title>
+</head>
+<body>
+<div 
+id="lisdos_out"
+class="lisdos_in"></div>  
+<form action="" id="form">
+    <input type="text" id="text">
+    <input type="submit" value="Buscar" id="submit">
+    <!--con voz-->
+    <input type="button" id="voice" value="Escuchar">
+</form>  
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script>
+    const form = document.getElementById('form');
+    const text = document.getElementById('text');
+    const voice = document.getElementById('voice');
+    const lisdos_out = document.getElementById('lisdos_out');
+    const submit = document.getElementById('submit');
+    const apiKey = 'TU_CLAVE_DE_API'; // Reemplaza con tu clave de API de Google Custom Search
+    const searchEngineId = 'TU_ID_DE_MOTOR_DE_BUSQUEDA'; // Reemplaza con tu ID de motor de búsqueda
+    
+    // Función para buscar imágenes basadas en el texto de entrada
+    submit.addEventListener('click', function(e) {
+        e.preventDefault();
+        lisdos_out.innerHTML = '';
+        searchImages(text.value);
+    });
+    
+    // Función para buscar imágenes utilizando la API de Google Custom Search
+    function searchImages(query) {
+        const url =
+            `https://www.googleapis.com/customsearch/v1?key=${apiKey}&cx=${searchEngineId}&q=${query}`;
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                if (data.items) {
+                    data.items.forEach(item => {
+                        lisdos_out.innerHTML += `
+                        <div class="lisdos_in">
+                            <img src="${item.link}" alt="${item.title}">
+                        </div>
+                        `;
+                    });
+                } else {
+                    console.error('No se encontraron resultados de imágenes.');
+                }
+            })
+            .catch(error => {
+                console.error('Error al buscar imágenes:', error);
+            });
+    }
+    
+    // Función de búsqueda por voz
+    voice.addEventListener('click', function() {
+        let msg = new SpeechSynthesisUtterance();
+        msg.lang = 'es';
+    
+        // Iniciar síntesis de voz
+        msg.text = 'Diga algo para buscar imágenes.';
+        speechSynthesis.speak(msg);
+    
+        // Iniciar reconocimiento de voz
+        window.SpeechRecognition = window.SpeechRecognition || webkitSpeechRecognition;
+        const recognition = new SpeechRecognition();
+        recognition.lang = 'es';
+        recognition.start();
+    
+        // Manejar el resultado del reconocimiento de voz
+        recognition.onresult = function(event) {
+            const speechToText = event.results[0][0].transcript;
+            text.value += speechToText;
+            searchImages(speechToText);
+        };
+    
+        // Manejar errores de reconocimiento
+        recognition.onerror = function(event) {
+            console.error('Error en el reconocimiento de voz:', event.error);
+        };
+    
+        // Detener el reconocimiento después de un tiempo determinado
+        recognition.onspeechend = function() {
+            recognition.stop();
+        };
+    });
+    
+    
+</script>
+
+</body>
+</html>
